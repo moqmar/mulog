@@ -10,7 +10,7 @@ const eyes = require("eyes");
  */
 function LoggerInstance(config = {}) {
     if (!new.target) throw new Error("µlog: LoggerInstance must be called with the keyword `new`");
-    
+
     this.config = {
         levels: config.levels || require("./index").styles.DEFAULT,
         console: {
@@ -19,22 +19,22 @@ function LoggerInstance(config = {}) {
           verbosity: 4,
           wrap: true,
           hardWrap: false,
-          indent: true,
-          ...config.console
+          indent: true
         },
         logfile: {
           path: null, //"logfile.json",
-          verbosity: 6,
-          ...config.logfile
+          verbosity: 6
         },
-        eyes: {
-          ...config.eyes
-        }
+        eyes: {}
         //syslog: {
         //},
-        
+
     }
-    
+
+    for (i in config.console) this.config.console[i] = config.console[i];
+    for (i in config.logfile) this.config.logfile[i] = config.logfile[i];
+    for (i in config.eyes) this.config.eyes[i] = config.eyes[i];
+
     this.config.levelsByName = this.config.levels.reduce((o,c) => { o[c.name] = c; return o }, {});
     this.config.defaultLevel = (this.config.levels.filter(l => l.default)[0] || this.config.levels[0]).name;
 
@@ -42,11 +42,13 @@ function LoggerInstance(config = {}) {
         this.logfile = fs.createWriteStream(this.config.logfile.path, { mode: parseInt("600", 8) });
     }
 
-    this.eyes = eyes.inspector({
-        maxLength: false,
-        ...this.config.eyes,
-        stream: null
-    });
+    let eyesConfig = {
+        maxLength: false
+    }
+    for (i in this.config.eyes) eyesConfig[i] = this.config.eyes[i];
+    eyes.stream = null;
+
+    this.eyes = eyes.inspector(eyesConfig);
     this.eyesWrapper = function(what) {
         // Workaround to not break eyes, for consistent coloring (cyan!)
         const f1 = eyes.stylize;
@@ -80,7 +82,7 @@ LoggerInstance.prototype.createDerivation = function createDerivation(data, recu
     };
     let f = require("./index").bind(o);
     o.self = data.self || f;
-    
+
     if (recursive) {
         f.instance = this;
         f.tags = data.tags || [];

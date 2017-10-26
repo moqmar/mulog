@@ -34,14 +34,14 @@ function formatMessage(message, config) {
     let output = colors.gray.bold(
         P(date.getUTCFullYear(), 4) + "-" + P(date.getUTCMonth(), 2) + "-" + P(date.getUTCDate(), 2) + " " +
         P(date.getUTCHours(), 2) + ":" + P(date.getUTCMinutes(), 2) + ":" + P(date.getUTCSeconds(), 2) + " ");
-    
+
     // Add symbol
     let notice = level.symbol;
     if (level.bold) notice = colors.bold(notice); // Make it bold if wanted
     if (level.color && colors[level.color]) notice = colors[level.color](notice);
     else if (!colors[level.color]) throw new Error("µlog: color for level " + level.name + " doesn't exist. See https://www.npmjs.com/package/colors for possible values")
     output += notice + " ";
-    
+
     // Calculate width of metadata for wrapping and indentation
     const metaWidth = stringWidth(output);
 
@@ -61,7 +61,7 @@ function formatMessage(message, config) {
             trim: false
         });
     }
-    
+
     // Indent line breaks
     if (process.stdout.isTTY && config.console.indent && wrapWidth > metaWidth) content = content.replace(/\n/g, "\n" + P("", metaWidth, " "));
 
@@ -74,7 +74,7 @@ function formatMessage(message, config) {
 
 /**
  * The logging function. Must have a bound object (if it has one, the function object is called "derivation") with the following structure to work:
- * 
+ *
  * ```javascript
  * {
  *     instance: LoggerInstance,
@@ -83,7 +83,7 @@ function formatMessage(message, config) {
  *     self: log.bind(this) // Currently called log function object for chaining
  * }
  * ```
- * 
+ *
  * If called without such an object or with the keyword `new`, this creates a new µ logger object by acting as a constructor for a new `LoggerInstance` and returning a derivation of it.
  * @param {*} what  The logging data, one or more parameters
  */
@@ -112,14 +112,13 @@ function log(...what) {
     //@TODO
 
     // Write to logfile
-    if (this.instance.logfile) this.instance.logfile.write(JSON.stringify({
-        ...message,
-        message: stripAnsi(message.message)
-    }) + "\n");
+    let line = JSON.parse(JSON.stringify(message));
+    line.message = stripAnsi(message.message)
+    if (this.instance.logfile) this.instance.logfile.write(JSON.stringify(line) + "\n");
 
     // Print to console
     (level.error ? process.stderr : process.stdout).write(formatMessage(message, this.instance.config));
-    
+
     return this.self;
 }
 
