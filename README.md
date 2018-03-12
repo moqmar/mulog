@@ -1,5 +1,7 @@
 # A tiny CLI logging library.
 
+A lightweight, worry-free and colourful logging module for console applications which supports logging to STDOUT/STDERR and a JSON file.
+
 Built for intuitive usage and a neat and helpful look in the terminal.
 
 ![](https://static.mo-mar.de/mulog.png)
