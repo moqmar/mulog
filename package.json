@@ -1,7 +1,7 @@
 {
   "name": "mulog",
-  "version": "0.1.1",
-  "description": "A lightweight, worry-free and colourful logging module for console applications which supports logging to STDOUT/STDERR, a JSON or text file and syslog.",
+  "version": "0.1.2",
+  "description": "A lightweight, worry-free and colourful logging module for console applications which supports logging to STDOUT/STDERR and a JSON file.",
   "main": "index.js",
   "scripts": {
     "test": "mocha",
@@ -28,15 +28,15 @@
   },
   "homepage": "https://github.com/moqmar/mulog#readme",
   "dependencies": {
-    "colors": "^1.1.2",
+    "colors": "^1.2.1",
     "eyes": "^0.1.8",
     "string-width": "^2.1.1",
     "wrap-ansi": "^3.0.1"
   },
   "devDependencies": {
     "expect.js": "^0.3.1",
-    "jsdoc": "^3.5.4",
+    "jsdoc": "^3.5.5",
     "minami": "^1.2.3",
-    "mocha": "^3.5.3"
+    "mocha": "^5.0.4"
   }
 }

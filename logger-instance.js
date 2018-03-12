@@ -16,14 +16,15 @@ function LoggerInstance(config = {}) {
         console: {
           colors: true,
           utc: true,
-          verbosity: 4,
+          verbosity: 5,
+          respectVerbosityArgs: true,
           wrap: true,
           hardWrap: false,
           indent: true
         },
         logfile: {
           path: null, //"logfile.json",
-          verbosity: 6
+          verbosity: 100
         },
         eyes: {}
         //syslog: {
@@ -34,6 +35,14 @@ function LoggerInstance(config = {}) {
     for (i in config.console) this.config.console[i] = config.console[i];
     for (i in config.logfile) this.config.logfile[i] = config.logfile[i];
     for (i in config.eyes) this.config.eyes[i] = config.eyes[i];
+
+    if (this.config.console.verbosity > this.config.levels.length) this.config.console.verbosity = this.config.levels.length;
+    if (this.config.console.respectVerbosityArgs) {
+        for (var i = 1; i < process.argv.length; i++) {
+            if (process.argv[i].match(/^-v+$/)) this.config.console.verbosity += process.argv[i].length - 1;
+            if (process.argv[i].match(/^-q+$/)) this.config.console.verbosity -= process.argv[i].length - 1;
+        }
+    }
 
     this.config.levelsByName = this.config.levels.reduce((o,c) => { o[c.name] = c; return o }, {});
     this.config.defaultLevel = (this.config.levels.filter(l => l.default)[0] || this.config.levels[0]).name;
@@ -46,7 +55,7 @@ function LoggerInstance(config = {}) {
         maxLength: false
     }
     for (i in this.config.eyes) eyesConfig[i] = this.config.eyes[i];
-    eyes.stream = null;
+    eyesConfig.stream = null;
 
     this.eyes = eyes.inspector(eyesConfig);
     this.eyesWrapper = function(what) {

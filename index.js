@@ -99,6 +99,7 @@ function log(...what) {
     let message = {
         timestamp: Date.now(),
         level: level.name,
+        verbosity: this.instance.config.levels.length - this.instance.config.levels.map(l => l.name).indexOf(level.name),
         message: [...what].map(x => {
             // Use strings as they are, eyes for everything else
             if (typeof x === "string") return x;
@@ -114,25 +115,16 @@ function log(...what) {
     // Write to logfile
     let line = JSON.parse(JSON.stringify(message));
     line.message = stripAnsi(message.message)
-    if (this.instance.logfile) this.instance.logfile.write(JSON.stringify(line) + "\n");
+    if (this.instance.logfile && this.instance.config.logfile.verbosity >= message.verbosity) this.instance.logfile.write(JSON.stringify(line) + "\n");
 
     // Print to console
-    (level.error ? process.stderr : process.stdout).write(formatMessage(message, this.instance.config));
+    if (this.instance.config.console.verbosity >= message.verbosity) (level.error ? process.stderr : process.stdout).write(formatMessage(message, this.instance.config));
 
     return this.self;
 }
 
 log.styles = {
-    DEFAULT: [
-        { name: "debug",   symbol: "[🐛]", color: "magenta", bold: true },
-        { name: "verbose", symbol: "[…]", color: "gray",    bold: false },
-        { name: "log",     symbol: "[»]", color: "white",   bold: false, default: true },
-        { name: "info",    symbol: "[i]", color: "blue",    bold: true },
-        { name: "success", symbol: "[✓]", color: "green",   bold: true },
-        { name: "warn",    symbol: "[!]", color: "yellow",  bold: true, error: true },
-        { name: "error",   symbol: "[❌]", color: "red",     bold: true, error: true }
-    ],
-    CLASSIC: [
+    SIMPLE: [
         { name: "debug",   symbol: "[d]", color: "magenta", bold: true },
         { name: "verbose", symbol: "[…]", color: "gray",    bold: false },
         { name: "log",     symbol: "   ", color: "white",   bold: false, default: true },
@@ -141,7 +133,7 @@ log.styles = {
         { name: "warn",    symbol: "[?]", color: "yellow",  bold: true, error: true },
         { name: "error",   symbol: "[!]", color: "red",     bold: true, error: true }
     ],
-    SIMPLE: [
+    DEFAULT: [
         { name: "debug",   symbol: "   debug:", color: "magenta", bold: true },
         { name: "verbose", symbol: " verbose:", color: "gray",    bold: false },
         { name: "log",     symbol: "     log:", color: "white",   bold: true, default: true },
@@ -159,6 +151,11 @@ log.styles = {
         { name: "warn",    symbol: "  ", color: "bgYellow",  bold: true, error: true },
         { name: "error",   symbol: "  ", color: "bgRed",     bold: true, error: true }
     ],
+}
+
+log.get = function get() {
+    if (log.singleton === undefined) log.singleton = new log(...arguments);
+    return log.singleton;
 }
 
 module.exports = log;
