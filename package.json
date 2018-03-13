@@ -1,6 +1,6 @@
 {
   "name": "mulog",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A lightweight, worry-free and colourful logging module for console applications which supports logging to STDOUT/STDERR and a JSON file.",
   "main": "index.js",
   "scripts": {
