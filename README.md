@@ -79,3 +79,6 @@ const µ = mulog.get({ // Config is only applied on first initialization.
 - textfile logging
 - syslog integration
 - proxy to different logging framework if used in a module (e.g. `global.µ = mulog.proxy("winston", winston)`, maybe even with autodetection if possible (?))
+- measure and display timing:
+  - Simple: `const t = µ.timing(); /* … */ t.debug("Did some stuff"); t.reset(); t.debug("Should be ~0.");`
+  - Function/promise/function returning a promise: `µ.timing(somethingLong, arg1, …).debug()`
