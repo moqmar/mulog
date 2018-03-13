@@ -72,6 +72,39 @@ function formatMessage(message, config) {
 }
 
 
+function simplifyError(error) {
+    first = colors.dim(" (launch with ") + colors.dim(colors.bold("PRINT_STACK=full")) + colors.dim(" for more detail)");
+    return colors.bold(colors.bgRed(error.message)) + error.stack
+        .replace(/^[^\n]+\n/, "\n")
+        .replace(/(\n\s*-+\n)/g, process.env.PRINT_STACK == "full" ? "$1" : "\n")
+        .replace(/(?:\n[^\n]* \(((?:internal\/)?[^\/\n]+|[^\n]*\/node_modules\/[^\n]*)\))+/g, (...e) => {
+            if (process.env.PRINT_STACK == "full") return e[0];
+            e = e[0].split("\n").slice(1).map(x => x.match(/ \((.*)\)$/)[1]);
+            let descriptions = {};
+            for (let i = 0; i < e.length; i++) {
+                let description = e[i].replace(/^.*\/node_modules\/([^\/]*).*$/, "$1");
+                if (description == e[i]) {
+                    description = e[i].match(/^(?:.*\/)?([^\/]*):\d+:\d+$/);
+                    if (!description) description = e[i].match(/^.*\/([^\/]*):\d+$/);
+                    if (!description) description = e[i].match(/^.*\/([^\/]*)$/);
+                    if (!description) description = e[i];
+                    else description = "node/" + description[1];
+                }
+                descriptions[description] = (descriptions[description] || 0) + 1;
+            }
+            e = [];
+            for (var i in descriptions) {
+                e.push(i + (descriptions[i] > 1 ? "[x" + descriptions[i] + "]" : ""));
+            }
+
+            const hint = first;
+            if (first != "") first = "";
+            return "\n" + colors.gray("     at " + e.join(", ")) + hint;
+        })
+        .replace(/^(\s*at )(\S+)( (?:\[.*\] )?\((?:[^\/\n]*\/)*)([^\n]*)(\))$/gm, colors.dim(" $1") + colors.bold("$2") + colors.dim("$3") + colors.bold("$4") + colors.dim("$5"));
+}
+
+
 /**
  * The logging function. Must have a bound object (if it has one, the function object is called "derivation") with the following structure to work:
  *
@@ -103,6 +136,7 @@ function log(...what) {
         message: [...what].map(x => {
             // Use strings as they are, eyes for everything else
             if (typeof x === "string") return x;
+            if (x instanceof Error) return simplifyError(x);
             else return this.instance.eyesWrapper(x);
         }).join(" "),
         tags: this.tags || [],
