@@ -80,3 +80,6 @@ const µ = mulog.get({ // Config is only applied on first initialization.
 - ~syslog integration~ (this needs to be done by the process manager, e.g. Docker or SystemD)
 - CLI to view JSON log files, with filtering
 - proxy to different logging framework if used in a module (e.g. `global.µ = mulog.proxy("winston", winston)`, maybe even with autodetection if possible (?))
+- measure and display timing:
+  - Simple: `const t = µ.timing(); /* … */ t.debug("Did some stuff"); t.reset(); t.debug("Should be ~0.");`
+  - Function/promise/function returning a promise: `µ.timing(somethingLong, arg1, …).debug()`
