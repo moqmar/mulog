@@ -1,5 +1,6 @@
-const mulog = require(".");
-global.µ = mulog.get(); // Only reinitialized if global.µ is unset.
+const mulog = require("./index");
+const µ = mulog.get(); // Use mulog as a singleton; recommended.
+// const µ = new mulog(); // Use mulog as an object.
 
 // Basic usage
 µ("Hello World");
@@ -18,22 +19,9 @@ global.µ = mulog.get(); // Only reinitialized if global.µ is unset.
     "Some stuff": 5,
     Whatever: true,
     fancy: function() { console.log("Hello World"); }
-})
+});
+µ.hex("Hell\000\001World"); // hex dump, always printed on debug level
 
-// Buffers
-var buffer = new Buffer(0x60);
-buffer.writeUInt16BE(0xaaaa, 0);
-buffer.writeUInt32BE(0x12345678, 0x40);
-buffer.writeUInt32BE(0xffffbbbb, 0x50);
-buffer.write('The quick brown fox jumps over the lazy dog!', 0x10);
-µ.hex(buffer);
-µ.debug(buffer);
-
-// Promises
-µ(new Promise(function (resolve, reject) { setTimeout(() => resolve("Hello World"), 600); }));
-µ(new Promise(function (resolve, reject) { setTimeout(() => reject("Goodbye World"), 500); }));
-
-// Tags
 {
     // Tags (recommended syntax for tagging full files/modules)
     const µ = mulog.get().tag("hello world");
@@ -42,6 +30,21 @@ buffer.write('The quick brown fox jumps over the lazy dog!', 0x10);
     // Nested tags and chained tag syntax
     µ.tag("requests").verbose("[404] /hello-world.txt");
 }
+
+const doSomething = () => {a = 1; for (let i = 1; i < 1000000000000 * Math.random(); i++) { a = a * i; }; return a};
+const doPromise = () => new Promise((resolve, reject) => setTimeout(() => Math.random() > 0.5 ? resolve("Success!") : reject(new Error("Alea iacta est")), 600));
+
+// Promises
+µ(doPromise());
+
+// Timing (short)
+µ.timer().debug(doSomething());
+
+// Timing (as instance)
+const t = µ.timer();
+t.debug("Something...");
+doSomething();
+t.debug("...happened!");
 
 // Wrapping
 µ("This is a very long piece of text which will probably wrap because your console can't possibly be as long as this text. Or can it? We don't know, maybe you have a 4K screen and work with the smallest font size possible. In that case I'd recommend resizing the console window. " + require("colors/safe").yellow.bold("Anyways, µlog even makes sure that even colored text is wrapped correctly and keeps its color when wrapped."));

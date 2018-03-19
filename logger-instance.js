@@ -88,6 +88,7 @@ LoggerInstance.prototype.createDerivation = function createDerivation(data, recu
     let o = {
         instance: this,
         tags: data.tags || [],
+        timerStart: data.timerStart || false,
         level: data.level || undefined,
         self: undefined
     };
@@ -97,11 +98,12 @@ LoggerInstance.prototype.createDerivation = function createDerivation(data, recu
     if (recursive) {
         f.instance = this;
         f.tags = data.tags || [];
+        f.timerStart = data.timerStart || false;
 
         // Initialize logger functions (like log.info())
         for (let level in this.config.levels) {
             if (f[this.config.levels[level].name]) continue;
-            f[this.config.levels[level].name] = this.createDerivation({ level: this.config.levels[level].name, tags: f.tags, self: f });
+            f[this.config.levels[level].name] = this.createDerivation({ level: this.config.levels[level].name, tags: f.tags, timerStart: f.timerStart, self: f });
         }
 
         // Derive an instance with tags added
@@ -109,6 +111,12 @@ LoggerInstance.prototype.createDerivation = function createDerivation(data, recu
             return this.instance.createDerivation({ tags: [...this.tags, ...tags] }, true);
         }
 
+        // Derive an instance with timer added
+        f.timer = function timer(...tags) {
+            return this.instance.createDerivation({ timerStart: Date.now() }, true);
+        }
+
+        // Print as hex dump
         f.hex = function hex(b) {
             return this.debug(colors.bold(Object.prototype.toString.call(b).replace(/^\[object |\]$/g, "")) + ":\n" + hexer(b, {
                 colored: true,

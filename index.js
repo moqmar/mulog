@@ -4,7 +4,6 @@
 
 // Base tools
 const eol = require("os").EOL;
-const sleep = require("sleep").msleep;
 
 // Beautification
 const colors = require("colors/safe");
@@ -136,9 +135,22 @@ function log(...what) {
     const level = this.instance.config.levelsByName[this.level || this.instance.config.defaultLevel];
     if (!level) throw new Error("µlog: logging level doesn't exist");
 
-    const formatArguments = (...what) => {
-        if (what.length == 1 && what[0] instanceof ResolvedPromise) what.unshift(colors.bold(colors.yellow("[Promise ") + colors[what[0].rejected ? "red" : "green"](what[0].rejected ? "× " : "✔ ") + colors.dim(what[0].time + "ms")) + colors.bold(colors.yellow("]")));
-        return [...what].map(x => {
+    const promise = (what.length == 1 && what[0] instanceof ResolvedPromise) ? what[0] : null;
+            
+    if (this.timerStart) {
+        const t = Date.now() - this.timerStart;
+        if (t < 1000) what.unshift(colors.bold(colors.blue("[" + t + "ms]")));
+        else if (t < 60*1000) what.unshift(colors.bold(colors.blue("[" + t/1000 + "s]")));
+    else what.unshift(colors.bold(colors.blue("[" + Math.floor(t / 60000) + ":" + ((t / 1000) % 60).toString().replace(/(\.\d\d\d).*/, "$1") + "]")));
+    }
+    if (promise) what.unshift(colors.bold(colors.yellow("[Promise ") + colors[promise.rejected ? "red" : "green"](promise.rejected ? "× " : "✔ ") + colors.blue(promise.time + "ms") + colors.yellow("]")));
+
+    // Build the message
+    let message = {
+        timestamp: Date.now(),
+        level: level.name,
+        verbosity: this.instance.config.levels.length - this.instance.config.levels.map(l => l.name).indexOf(level.name),
+        message: [...what].map(x => {
             if (x instanceof ResolvedPromise) x = x.result;
             
             if (typeof x === "string") return x;
@@ -146,17 +158,9 @@ function log(...what) {
             else if (x instanceof Buffer) return x.toString();
             else if (x instanceof Promise) { resolvePromise(this, x, this.instance.getOccurence(3), level.error); return colors.yellow(colors.bold("[Promise ?]")); }
             else return this.instance.eyesWrapper(x);
-        }).join(" ");
-    }
-
-    // Build the message
-    let message = {
-        timestamp: Date.now(),
-        level: level.name,
-        verbosity: this.instance.config.levels.length - this.instance.config.levels.map(l => l.name).indexOf(level.name),
-        message: formatArguments(...what),
+        }).join(" "),
         tags: this.tags || [],
-        occurence: (what.length == 1 && what[0] instanceof ResolvedPromise) ? what[0].occurence : this.instance.getOccurence()
+        occurence: promise ? promise.occurence : this.instance.getOccurence()
     }
 
     // Write to logfile
