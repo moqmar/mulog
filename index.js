@@ -76,7 +76,7 @@ function formatMessage(message, config) {
 function simplifyError(error) {
     first = colors.dim(" (launch with ") + colors.dim(colors.bold("PRINT_STACK=full")) + colors.dim(" for more detail)");
     return colors.bold(colors.bgRed(error.message)) + error.stack
-        .replace(/^[^\n]+\n/, "\n")
+        .replace(/^[^\n]+(?:\n|$)/, "\n")
         .replace(/(\n\s*-+\n)/g, process.env.PRINT_STACK == "full" ? "$1" : "\n")
         .replace(/(?:\n[^\n]* \(((?:internal\/)?[^\/\n]+|[^\n]*\/node_modules\/[^\n]*)\))+/g, (...e) => {
             if (process.env.PRINT_STACK == "full") return e[0];
