@@ -26,7 +26,7 @@ function P(v,l,c,r) { v = v.toString(); while (v.length < l) v = r ? v + (c||0) 
  * @param {*} config   The configuration object of the µlog instance
  * @returns            The message as formatted text
  */
-function formatMessage(message, config) {
+function formatMessage(message, config, raw) {
     const level = config.levelsByName[message.level];
 
     // Formatted UTC date
@@ -53,7 +53,7 @@ function formatMessage(message, config) {
 
     // Wrap long lines
     const wrapWidth = (process.stdout.columns || 80) - metaWidth - 1;
-    if (process.stdout.isTTY && config.console.wrap > 0) {
+    if (!raw && process.stdout.isTTY && config.console.wrap > 0) {
         // If everything's still readable (i.e. not 1 letter per line), wrap the text
         if (wrapWidth > metaWidth) content = wrapAnsi(content, wrapWidth, {
             hard: true,
@@ -68,6 +68,7 @@ function formatMessage(message, config) {
     output += content;
     output = output.replace(/\r\n|\r|\n/g, eol) + eol; // Use system line breaks for everything
 
+    if (raw) return stripAnsi(output);
     return output;
 }
 
@@ -136,7 +137,7 @@ function log(...what) {
     if (!level) throw new Error("µlog: logging level doesn't exist");
 
     const promise = (what.length == 1 && what[0] instanceof ResolvedPromise) ? what[0] : null;
-            
+
     if (this.timerStart) {
         const t = Date.now() - this.timerStart;
         if (t < 1000) what.unshift(colors.bold(colors.blue("[" + t + "ms]")));
@@ -168,6 +169,9 @@ function log(...what) {
     line.message = stripAnsi(message.message)
     if (this.instance.logfile && this.instance.config.logfile.verbosity >= message.verbosity) this.instance.logfile.write(JSON.stringify(line) + "\n");
 
+    // Write to logdump
+    if (this.instance.file && this.instance.config.file.verbosity >= message.verbosity) this.instance.file.write(formatMessage(message, this.instance.config, true));
+    
     // Print to console
     if (this.instance.config.console.verbosity >= message.verbosity) (level.error ? process.stderr : process.stdout).write(formatMessage(message, this.instance.config));
 

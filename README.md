@@ -1,14 +1,26 @@
 # A tiny CLI logging library.
 
-A lightweight, worry-free and colourful logging module for console applications which supports logging to STDOUT/STDERR and a JSON file.
+A lightweight, worry-free and colourful logging module for console applications which supports logging to STDOUT/STDERR, a JSON-like log file or a plain text file.
 
 Built for intuitive usage and a neat and helpful look in the terminal.
 
+## Features
+- Beautify objects and errors
+- Print buffers as hex dump
+- Tagging
+- Show timestamps and the related source file
+- Easily debug promises
+- Simple timing support for messages, functions and promises
+- Full color support
+- Log to console (with support for `-v`/`-q` arguments) or to a file
+
 ![](https://static.mo-mar.de/mulog.png)
 ![](https://static.mo-mar.de/mulog-buffer.png)
+![](https://static.mo-mar.de/mulog-timer.png)
 
 ```javascript
 const mulog = require("mulog");
+mulog.get({file:"log.txt"}) // How to set a file/change other configuration options.
 const µ = mulog.get(); // Use mulog as a singleton; recommended.
 // const µ = new mulog(); // Use mulog as an object.
 
@@ -30,9 +42,8 @@ const µ = mulog.get(); // Use mulog as a singleton; recommended.
     Whatever: true,
     fancy: function() { console.log("Hello World"); }
 });
-µ.hex(fs.readFileSync("/lib/x86_64-linux-gnu/security/pam_deny.so"));
+µ.hex("Hell\000\001World"); // hex dump, always printed on debug level
 
-// Tags
 {
     // Tags (recommended syntax for tagging full files/modules)
     const µ = mulog.get().tag("hello world");
@@ -42,8 +53,20 @@ const µ = mulog.get(); // Use mulog as a singleton; recommended.
     µ.tag("requests").verbose("[404] /hello-world.txt");
 }
 
-// Wrapping
-µ("This is a very long piece of text which will probably wrap because your console can't possibly be as long as this text. Or can it? We don't know, maybe you have a 4K screen and work with the smallest font size possible. In that case I'd recommend resizing the console window. " + require("colors/safe").yellow.bold("Anyways, µlog even makes sure that even colored text is wrapped correctly and keeps its color when wrapped."));
+const doSomething = () => {a = 1; for (let i = 0; i < 1000000000000 * Math.random(); i++) { a = a * i; }; return a};
+const doPromise = () => new Promise((resolve, reject) => setTimeout(() => Math.random() > 0.5 ? resolve("Success!") : reject(new Error("Alea iacta est")), 600));
+
+// Promises
+µ(doPromise());
+
+// Timing (short)
+µ.timer().debug(doSomething());
+
+// Timing (as instance)
+const t = µ.timer();
+t.debug("Something...");
+doSomething();
+t.debug("...happened!");
 ```
 
 ## Default configuration
@@ -64,7 +87,11 @@ const µ = mulog.get({ // Config is only applied on first initialization.
         hardWrap: false,
         indent: true
     },
-    logfile: {
+    file: { // Text file output
+        path: null, //"logfile.txt",
+        verbosity: 100
+    },
+    logfile: { // JSON file output
         path: null, //"logfile.json",
         verbosity: 100
     },
@@ -78,10 +105,6 @@ const µ = mulog.get({ // Config is only applied on first initialization.
 
 ## Roadmap
 
-- textfile logging
-- ~syslog integration~ (this needs to be done by the process manager, e.g. Docker or SystemD)
 - CLI to view JSON log files, with filtering
 - proxy to different logging framework if used in a module (e.g. `global.µ = mulog.proxy("winston", winston)`, maybe even with autodetection if possible (?))
-- measure and display timing:
-  - Simple: `const t = µ.timing(); /* … */ t.debug("Did some stuff"); t.reset(); t.debug("Should be ~0.");`
-  - Function/promise/function returning a promise: `µ.timing(somethingLong, arg1, …).debug()`
+- ~~syslog integration~~ (this needs to be done by the process manager, e.g. Docker or SystemD)

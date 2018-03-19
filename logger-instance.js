@@ -24,6 +24,10 @@ function LoggerInstance(config = {}) {
           hardWrap: false,
           indent: true
         },
+        file: {
+          path: null, //"logfile.txt",
+          verbosity: 100
+        },
         logfile: {
           path: null, //"logfile.json",
           verbosity: 100
@@ -35,9 +39,13 @@ function LoggerInstance(config = {}) {
     }
 
     for (i in config.console) this.config.console[i] = config.console[i];
-    for (i in config.logfile) this.config.logfile[i] = config.logfile[i];
     for (i in config.eyes) this.config.eyes[i] = config.eyes[i];
 
+    if (typeof config.logfile === "string") this.config.logfile.path = config.logfile;
+    else for (i in config.logfile) this.config.logfile[i] = config.logfile[i];
+    if (typeof config.file === "string") this.config.file.path = config.file;
+    else for (i in config.file) this.config.file[i] = config.file[i];
+    
     if (this.config.console.verbosity > this.config.levels.length) this.config.console.verbosity = this.config.levels.length;
     if (this.config.console.respectVerbosityArgs) {
         for (var i = 1; i < process.argv.length; i++) {
@@ -51,6 +59,10 @@ function LoggerInstance(config = {}) {
 
     if (this.config.logfile.path) {
         this.logfile = fs.createWriteStream(this.config.logfile.path, { mode: parseInt("600", 8) });
+    }
+
+    if (this.config.file.path) {
+        this.file = fs.createWriteStream(this.config.file.path, { mode: parseInt("600", 8) });
     }
 
     let eyesConfig = {

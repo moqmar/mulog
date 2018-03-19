@@ -1,4 +1,5 @@
 const mulog = require("./index");
+//mulog.get({file:"log.txt"}) // How to set a file/change other configuration options.
 const µ = mulog.get(); // Use mulog as a singleton; recommended.
 // const µ = new mulog(); // Use mulog as an object.
 
