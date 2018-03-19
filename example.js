@@ -20,6 +20,13 @@ global.µ = mulog.get(); // Only reinitialized if global.µ is unset.
     fancy: function() { console.log("Hello World"); }
 })
 
+var buffer = new Buffer(0x60);
+buffer.writeUInt16BE(0xaaaa, 0);
+buffer.writeUInt32BE(0x12345678, 0x40);
+buffer.writeUInt32BE(0xffffbbbb, 0x50);
+buffer.write('The quick brown fox jumps over the lazy dog!', 0x10);
+µ.hex(buffer);
+
 // Tags
 {
     // Tags (recommended syntax for tagging full files/modules)

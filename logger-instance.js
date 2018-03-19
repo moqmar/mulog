@@ -3,6 +3,8 @@ const fs = require("fs");
 
 // Beautification
 const eyes = require("eyes");
+const colors = require("colors/safe");
+const hexer = require("hexer");
 
 /**
  * Constructor for a new LoggerInstance
@@ -107,6 +109,15 @@ LoggerInstance.prototype.createDerivation = function createDerivation(data, recu
             return this.instance.createDerivation({ tags: [...this.tags, ...tags] }, true);
         }
 
+        f.hex = function hex(b) {
+            return this.debug(colors.bold(Object.prototype.toString.call(b).replace(/^\[object |\]$/g, "")) + ":\n" + hexer(b, {
+                colored: true,
+                group: 1,
+                nullHuman: true,
+                headSep: " \033[0m ",
+                prefix: " \033[45m "
+            }) + "\n    ");
+        }
     }
 
     return f;

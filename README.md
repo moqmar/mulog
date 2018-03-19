@@ -5,6 +5,7 @@ A lightweight, worry-free and colourful logging module for console applications 
 Built for intuitive usage and a neat and helpful look in the terminal.
 
 ![](https://static.mo-mar.de/mulog.png)
+![](https://static.mo-mar.de/mulog-buffer.png)
 
 ```javascript
 const mulog = require("mulog");
@@ -28,7 +29,8 @@ const µ = mulog.get(); // Use mulog as a singleton; recommended.
     "Some stuff": 5,
     Whatever: true,
     fancy: function() { console.log("Hello World"); }
-})
+});
+µ.hex(fs.readFileSync("/lib/x86_64-linux-gnu/security/pam_deny.so"));
 
 // Tags
 {

@@ -137,6 +137,7 @@ function log(...what) {
             // Use strings as they are, eyes for everything else
             if (typeof x === "string") return x;
             if (x instanceof Error) return simplifyError(x);
+            else if (x instanceof Buffer) return x.toString();
             else return this.instance.eyesWrapper(x);
         }).join(" "),
         tags: this.tags || [],
