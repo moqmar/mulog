@@ -75,8 +75,8 @@ function LoggerInstance(config = {}) {
 /**
  * Get the file, line and column from which the log function was called
  */
-LoggerInstance.prototype.getOccurence = function getOccurence() {
-    return (new Error().stack.split("\n")[3] || "").replace(/^.*[\/\(]([^\/\(\)]+)\)?$/, "$1"); //@TODO Better RegExp
+LoggerInstance.prototype.getOccurence = function getOccurence(n) {
+    return (new Error().stack.split("\n")[3+(n||0)] || "").replace(/^.*[\/\(]([^\/\(\)]+)\)?$/, "$1"); //@TODO Better RegExp
 }
 
 /**

@@ -4,6 +4,7 @@
 
 // Base tools
 const eol = require("os").EOL;
+const sleep = require("sleep").msleep;
 
 // Beautification
 const colors = require("colors/safe");
@@ -105,6 +106,13 @@ function simplifyError(error) {
 }
 
 
+function ResolvedPromise(result, occurence, rejected, now) { this.result = result; this.occurence = occurence; this.rejected = rejected; this.time = Date.now() - now; }
+function resolvePromise(log, promise, occurence, error) {
+    const now = Date.now();
+    promise.then(result => log.self(new ResolvedPromise(result, occurence, false, now)), error => log.self(new ResolvedPromise(error, occurence, true, now)));
+}
+
+
 /**
  * The logging function. Must have a bound object (if it has one, the function object is called "derivation") with the following structure to work:
  *
@@ -128,24 +136,28 @@ function log(...what) {
     const level = this.instance.config.levelsByName[this.level || this.instance.config.defaultLevel];
     if (!level) throw new Error("µlog: logging level doesn't exist");
 
+    const formatArguments = (...what) => {
+        if (what.length == 1 && what[0] instanceof ResolvedPromise) what.unshift(colors.bold(colors.yellow("[Promise ") + colors[what[0].rejected ? "red" : "green"](what[0].rejected ? "× " : "✔ ") + colors.dim(what[0].time + "ms")) + colors.bold(colors.yellow("]")));
+        return [...what].map(x => {
+            if (x instanceof ResolvedPromise) x = x.result;
+            
+            if (typeof x === "string") return x;
+            if (x instanceof Error) return simplifyError(x);
+            else if (x instanceof Buffer) return x.toString();
+            else if (x instanceof Promise) { resolvePromise(this, x, this.instance.getOccurence(3), level.error); return colors.yellow(colors.bold("[Promise ?]")); }
+            else return this.instance.eyesWrapper(x);
+        }).join(" ");
+    }
+
     // Build the message
     let message = {
         timestamp: Date.now(),
         level: level.name,
         verbosity: this.instance.config.levels.length - this.instance.config.levels.map(l => l.name).indexOf(level.name),
-        message: [...what].map(x => {
-            // Use strings as they are, eyes for everything else
-            if (typeof x === "string") return x;
-            if (x instanceof Error) return simplifyError(x);
-            else if (x instanceof Buffer) return x.toString();
-            else return this.instance.eyesWrapper(x);
-        }).join(" "),
+        message: formatArguments(...what),
         tags: this.tags || [],
-        occurence: this.instance.getOccurence()
+        occurence: (what.length == 1 && what[0] instanceof ResolvedPromise) ? what[0].occurence : this.instance.getOccurence()
     }
-
-    // Send to syslog
-    //@TODO
 
     // Write to logfile
     let line = JSON.parse(JSON.stringify(message));
